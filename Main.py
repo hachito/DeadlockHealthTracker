@@ -17,24 +17,27 @@ async def on_ready():
      print("logged in")
 
 @bot.command()
-async def HealthCheck(ctx):
+async def Start(ctx):
     colorCheck.start(ctx)
 
 @tasks.loop(seconds=2)
 async def colorCheck(ctx):
-    if getHealthInfo(ImageGrab.grab()):
-        client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-        # If bot is already in call for other purposes, just play the sound
-        if client:
-            vc = connections[ctx.guild.id]
+    client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+    # If bot is already in call, just play the sound
+    if client:
+        vc = connections[ctx.guild.id]
+        connections.update({ctx.guild.id: vc})
+        if getHealthInfo(ImageGrab.grab()):
             vc.play(discord.FFmpegPCMAudio('Audio/GetHealth.wav'))
-        # If bot is not in call, joins the users channel, plays the sound, and leaves when sound is done
-        else:
-            vc = await ctx.author.voice.channel.connect()
+    # If bot is not in call, joins the users channel, plays the sound
+    else:
+        vc = await ctx.author.voice.channel.connect()
+        connections.update({ctx.guild.id: vc})
+        if getHealthInfo(ImageGrab.grab()):
             vc.play(discord.FFmpegPCMAudio('Audio/GetHealth.wav'))
 
 @bot.command()
-async def stop(ctx):
+async def Stop(ctx):
     if ctx.guild.id in connections:  # Check if the guild is in the cache.
         vc = connections[ctx.guild.id]
         vc.disconnect()
@@ -43,4 +46,4 @@ async def stop(ctx):
     else:
         await ctx.send("type shit")
 
-#bot.run(insert token here)
+bot.run("")
